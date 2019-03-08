@@ -31,7 +31,11 @@
 package com.raywenderlich.android.razegalactic
 
 import android.os.Bundle
+import android.support.constraint.ConstraintSet
 import android.support.v7.app.AppCompatActivity
+import android.transition.AutoTransition
+import android.transition.Transition
+import android.transition.TransitionManager
 import kotlinx.android.synthetic.main.activity_main.*
 
 /**
@@ -39,12 +43,42 @@ import kotlinx.android.synthetic.main.activity_main.*
  */
 class MainActivity : AppCompatActivity() {
 
+  private val constraintset1 = ConstraintSet()
+  private val constraintset2 = ConstraintSet()
+
+  private var isOffscreen = true
+
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    setContentView(R.layout.activity_main)
+    setContentView(R.layout.keyframe1)
 
     switch1.setOnCheckedChangeListener { _, isChecked ->
       switch1.setText(if (isChecked) R.string.round_trip else R.string.one_way)
     }
+
+    constraintset1.clone(constraintLayout)
+    constraintset2.clone(this, R.layout.activity_main)
+
+    departButton.setOnClickListener {
+
+      val transition = AutoTransition()
+      transition.duration = 2000
+      TransitionManager.beginDelayedTransition(constraintLayout, transition)
+      val constraint = if (!isOffscreen) constraintset1 else constraintset2
+      isOffscreen = !isOffscreen
+      constraint.applyTo(constraintLayout)
+    }
+  }
+
+  override fun onEnterAnimationComplete() {
+    super.onEnterAnimationComplete()
+
+    constraintset2.clone(this, R.layout.activity_main)
+
+    val transition = AutoTransition()
+    transition.duration = 1000
+    TransitionManager.beginDelayedTransition(constraintLayout, transition)
+
+    constraintset2.applyTo(constraintLayout)
   }
 }
